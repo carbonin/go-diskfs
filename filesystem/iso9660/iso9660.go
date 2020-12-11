@@ -378,6 +378,7 @@ func (fs *FileSystem) OpenFile(p string, flag int) (filesystem.File, error) {
 		if targetEntry == nil {
 			return nil, fmt.Errorf("Target file %s does not exist", p)
 		}
+		fmt.Printf("Target file %s found, Size(): %d, size: %d\n", p, targetEntry.Size(), targetEntry.size)
 		// now open the file
 		f = &File{
 			directoryEntry: targetEntry,

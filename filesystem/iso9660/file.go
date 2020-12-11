@@ -28,6 +28,7 @@ func (fl *File) Read(b []byte) (int, error) {
 	location := int(fl.location)
 	maxRead := size
 	file := fs.file
+	fmt.Printf("File %s\nsize: %d\nfl.size: %d\nfl.offset: %d\nlen(b): %d\n", size, fl.size, fl.offset, len(b))
 
 	// if there is nothing left to read, just return EOF
 	if size <= 0 {
@@ -39,6 +40,7 @@ func (fl *File) Read(b []byte) (int, error) {
 	//   2- file end
 	if len(b) < maxRead {
 		maxRead = len(b)
+		fmt.Printf("Set maxRead to %d\n", maxRead)
 	}
 
 	// just read the requested number of bytes and change our offset

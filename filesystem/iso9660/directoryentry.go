@@ -254,6 +254,7 @@ func dirEntryFromBytes(b []byte, ext []suspExtension) (*directoryEntry, error) {
 			return nil, fmt.Errorf("Unable to parse directory entry extensions: %v", err)
 		}
 	}
+	fmt.Printf("Got directory entry %s of size %d\n", filename, size)
 
 	return &directoryEntry{
 		extAttrSize:              extAttrSize,
