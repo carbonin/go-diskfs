@@ -3,27 +3,38 @@ package iso9660_test
 import (
 	"io"
 	"io/ioutil"
+	"strings"
 	"testing"
+	"testing/iotest"
 
 	"github.com/diskfs/go-diskfs/filesystem/iso9660"
 )
 
 func TestFileRead(t *testing.T) {
-	// pretty simple: never should be able to write as it is a read-only filesystem
-	// we use
 	f, content := iso9660.GetTestFile(t)
 
-	b := make([]byte, 20, 20)
-	read, err := f.Read(b)
-	if read != 0 && err != io.EOF {
+	b, err := io.ReadAll(f)
+	if err != nil {
 		t.Errorf("received unexpected error when reading: %v", err)
 	}
-	if read != len(content) {
-		t.Errorf("read %d bytes instead of expected %d", read, len(content))
-	}
-	bString := string(b[:read])
+	bString := string(b)
 	if bString != content {
 		t.Errorf("Mismatched content:\nActual: '%s'\nExpected: '%s'", bString, content)
+	}
+}
+
+func TestPassesStdTestReader(t *testing.T) {
+	file, content := iso9660.GetTestFile(t)
+
+	if err := iotest.TestReader(file, []byte(content)); err != nil {
+		t.Errorf("Failed iotest.TestReader: %v", err)
+	}
+
+	largeFile, size := iso9660.GetLargeTestFile(t)
+	bytes := make([]byte, size, size)
+	if err := iotest.TestReader(largeFile, bytes); err != nil {
+		// only print the first line because the error contains the entire file content
+		t.Errorf("large file failed iotest.TestReader: %s", strings.Split(err.Error(), "\n")[0])
 	}
 }
 
