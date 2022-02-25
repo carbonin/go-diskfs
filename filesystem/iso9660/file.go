@@ -25,19 +25,17 @@ func (fl *File) Read(b []byte) (int, error) {
 	if fl == nil || fl.closed {
 		return 0, os.ErrClosed
 	}
+
+	// required behavior by the standard library io.Reader interface
+	if len(b) == 0 {
+		return 0, nil
+	}
+
 	// we have the DirectoryEntry, so we can get the starting location and size
 	// since iso9660 files are contiguous, we only need the starting location and size
 	//   to get the entire file
 	fs := fl.filesystem
-	size := int(fl.size) - int(fl.offset)
-	location := int(fl.location)
-	maxRead := size
-	file := fs.file
-
-	// if there is nothing left to read, just return EOF
-	if size <= 0 {
-		return 0, io.EOF
-	}
+	maxRead := int(fl.size) - int(fl.offset)
 
 	// we stop when we hit the lesser of
 	//   1- len(b)
@@ -47,14 +45,14 @@ func (fl *File) Read(b []byte) (int, error) {
 	}
 
 	// just read the requested number of bytes and change our offset
-	file.ReadAt(b[0:maxRead], int64(location)*fs.blocksize+int64(fl.offset))
+	bytes, err := fs.file.ReadAt(b[0:maxRead], int64(fl.location)*fs.blocksize+int64(fl.offset))
+	fl.offset = fl.offset + int64(bytes)
 
-	fl.offset = fl.offset + int64(maxRead)
-	var retErr error
-	if fl.offset >= int64(fl.size) {
-		retErr = io.EOF
+	if err == nil && fl.offset >= int64(fl.size) {
+		err = io.EOF
 	}
-	return maxRead, retErr
+
+	return bytes, err
 }
 
 // Write writes len(b) bytes to the File.
